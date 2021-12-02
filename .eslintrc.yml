@@ -1,0 +1,25 @@
+env:
+  browser: true
+  es2021: true
+
+plugins:
+  - jest
+  - prettier
+
+extends:
+  - airbnb-base
+  - plugin:jest/recommended
+  - prettier
+
+parserOptions:
+  ecmaVersion: 13
+  sourceType: module
+
+rules:
+  prettier/prettier: ['error']
+  no-console: 0
+  import/extensions:
+    - error
+    - ignorePackages
+    - js: always
+  no-underscore-dangle: [2, { "allow": ["__filename", "__dirname"] }]
