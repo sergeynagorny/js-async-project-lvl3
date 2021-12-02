@@ -1,7 +1,8 @@
-name: Lint & Tests
+name: lint-n-tests
 
 on:
   - pull_request
+  - push
 
 jobs:
   build:
