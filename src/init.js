@@ -1,3 +1,3 @@
-export default function init() {
-    console.log('init')
+export default function init(requestUrl, outputPath) {
+    console.log({ requestUrl, outputPath })
 }

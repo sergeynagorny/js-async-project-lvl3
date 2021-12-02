@@ -30,5 +30,8 @@
     "eslint-plugin-prettier": "^4.0.0",
     "jest": "^27.4.3",
     "prettier": "^2.5.0"
+  },
+  "dependencies": {
+    "commander": "^8.3.0"
   }
 }
