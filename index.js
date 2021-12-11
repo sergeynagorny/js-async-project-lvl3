@@ -1,3 +1,3 @@
-import init from './src/init.js'
+import loadPage from './src/load-page.js'
 
-export default init
+export default loadPage
