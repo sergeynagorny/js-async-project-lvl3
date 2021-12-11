@@ -18,6 +18,9 @@ parserOptions:
 rules:
   prettier/prettier: ['error']
   no-console: 0
+  prefer-regex-literals: 0
+  no-return-await: 0
+  import/prefer-default-export: 0
   import/extensions:
     - error
     - ignorePackages
