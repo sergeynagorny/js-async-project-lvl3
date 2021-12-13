@@ -1,4 +1,4 @@
-const EXT = 'html|png|jpg|jpeg|svg'
+const EXT = 'html|png|jpg|css|js'
 
 const Reg = {
     protocol: new RegExp(/^https?:\/\//),

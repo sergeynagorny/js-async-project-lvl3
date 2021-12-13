@@ -27,7 +27,12 @@ beforeAll(async () => {
 
     nock.disableNetConnect()
     nock('https://ru.hexlet.io').get('/courses').reply(200, html)
-    nock('https://ru.hexlet.io').get('/assets/nodejs.png').reply(200, img)
+    nock('https://ru.hexlet.io').get('/assets/professions/nodejs.png').reply(200, img)
+    nock('https://ru.hexlet.io')
+        .get(/\.(html|css|js)/)
+        .reply(200, '')
+    nock('https://ru.hexlet.io').get('/courses.html').reply(200, '')
+    nock('https://ru.hexlet.io').get('/packs/js/runtime.js').reply(200, '')
 })
 
 test('load page', async () => {
@@ -35,7 +40,9 @@ test('load page', async () => {
     const resultHtml = await readTmpFile(resultHtmlFileName)
     const expectedHtml = await readFixturesFile('after.html').then(formatHtml)
     const expectedImgFile = await readFixturesFile('img/nodejs.png')
-    const resultImgFile = await readTmpFile(`${resultFilesDirName}/ru-hexlet-io-assets-nodejs.png`)
+    const resultImgFile = await readTmpFile(
+        `${resultFilesDirName}/ru-hexlet-io-assets-professions-nodejs.png`
+    )
 
     expect(filePath).toEqual(getTmpPath(resultHtmlFileName))
     expect(expectedHtml).toEqual(resultHtml)
