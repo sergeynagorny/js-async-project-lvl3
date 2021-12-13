@@ -5,6 +5,12 @@ import fs from 'fs/promises'
 import _ from 'lodash'
 import createName from './create-name.js'
 
+const SourceAttrBySelector = {
+    script: 'src',
+    link: 'href',
+    img: 'src',
+}
+
 const getFilePromise = (href, filePath) =>
     axios
         .get(href, { responseType: 'arraybuffer' })
@@ -12,59 +18,38 @@ const getFilePromise = (href, filePath) =>
 
 export default function loadPageFiles({ html, requestUrl, outputPath }) {
     const $ = cheerio.load(html)
-    const filesDirRelativePath = createName(requestUrl, '_files')
+    const pageUrl = new URL(requestUrl)
+    const filesDirRelativePath = createName(pageUrl, '_files')
     const filesDirAbsolutePath = path.join(outputPath, filesDirRelativePath)
     const promises = []
 
-    $.root()
-        .find('img')
-        .each((i, element) => {
-            const elementSrc = $(element).attr('src')
-            const { href: fileHref } = new URL(elementSrc, requestUrl)
-            const fileRelativePath = path.join(filesDirRelativePath, createName(fileHref))
-            const fileAbsolutePath = path.join(outputPath, fileRelativePath)
+    const SELECTORS = ['img', 'link', 'script']
 
-            promises.push(getFilePromise(fileHref, fileAbsolutePath))
+    SELECTORS.forEach((selector) => {
+        $.root()
+            .find(selector)
+            .each((i, element) => {
+                const attr = SourceAttrBySelector[selector]
+                let elementSrc = $(element).attr(attr)
 
-            $(element).attr('src', fileRelativePath)
-        })
+                if (selector === 'link' && $(element).attr('rel') !== 'stylesheet') {
+                    elementSrc += '.html'
+                }
 
-    $.root()
-        .find('link')
-        .each((i, element) => {
-            let elementSrc = $(element).attr('href')
-            const elementRel = $(element).attr('rel')
+                const fileUrl = new URL(elementSrc, requestUrl)
 
-            if (elementRel !== 'stylesheet') {
-                elementSrc += '.html'
-            }
+                if (fileUrl.origin !== pageUrl.origin) {
+                    return
+                }
 
-            if (new URL(requestUrl).origin !== new URL(elementSrc, requestUrl).origin) {
-                return
-            }
+                const fileRelativePath = path.join(filesDirRelativePath, createName(fileUrl.href))
+                const fileAbsolutePath = path.join(outputPath, fileRelativePath)
 
-            const { href: fileHref } = new URL(elementSrc, requestUrl)
-            const fileRelativePath = path.join(filesDirRelativePath, createName(fileHref))
-            const fileAbsolutePath = path.join(outputPath, fileRelativePath)
-            promises.push(getFilePromise(fileHref, fileAbsolutePath))
-            $(element).attr('href', fileRelativePath)
-        })
+                promises.push(getFilePromise(fileUrl.href, fileAbsolutePath))
 
-    $.root()
-        .find('script')
-        .each((i, element) => {
-            const elementSrc = $(element).attr('src')
-
-            if (new URL(requestUrl).origin !== new URL(elementSrc, requestUrl).origin) {
-                return
-            }
-
-            const { href: fileHref } = new URL(elementSrc, requestUrl)
-            const fileRelativePath = path.join(filesDirRelativePath, createName(fileHref))
-            const fileAbsolutePath = path.join(outputPath, fileRelativePath)
-            promises.push(getFilePromise(fileHref, fileAbsolutePath))
-            $(element).attr('src', fileRelativePath)
-        })
+                $(element).attr(attr, fileRelativePath)
+            })
+    })
 
     return fs
         .mkdir(filesDirAbsolutePath)
