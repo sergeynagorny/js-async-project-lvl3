@@ -11,8 +11,10 @@ extends:
   - plugin:jest/recommended
   - prettier
 
+ignorePatterns: ['/__fixtures__/*']
+
 parserOptions:
-  ecmaVersion: 13
+  ecmaVersion: latest
   sourceType: module
 
 rules:
