@@ -1,22 +1,33 @@
 import { test, expect } from '@jest/globals'
 import { fileURLToPath } from 'url'
 import { tmpdir } from 'os'
-import { mkdtemp, readFile } from 'fs/promises'
+import { mkdtemp, readFile as readFileBase, readdir } from 'fs/promises'
 import { dirname, join } from 'path'
+import _ from 'lodash'
 import nock from 'nock'
-import pageLoader from '../src/init.js'
+import pageLoader from '../src/index.js'
 
 let tempPath
+
+const readFile = _.partialRight(readFileBase, 'utf-8')
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const getFixturePath = (filename) => join(__dirname, '..', '__fixtures__', filename)
-const readFixture = (filename) => readFile(getFixturePath(filename), 'utf-8')
+const readFixture = (filename) => readFile(getFixturePath(filename))
 
 beforeEach(async () => {
     tempPath = await mkdtemp(join(tmpdir(), 'page-loader-'))
 
-    const expectedFile = await readFixture('expected-file.html')
-    nock('https://ru.hexlet.io').get('/courses').reply(200, expectedFile)
+    nock('https://ru.hexlet.io')
+        .get('/courses')
+        .times(2)
+        .replyWithFile(200, getFixturePath('index.html'))
+        .get('/assets/professions/nodejs.png')
+        .replyWithFile(200, getFixturePath('picture.png'))
+        .get('/packs/js/runtime.js')
+        .replyWithFile(200, getFixturePath('script.js'))
+        .get('/assets/application.css')
+        .replyWithFile(200, getFixturePath('styles.css'))
 })
 
 test('page-loader: full path of the loaded file', async () => {
@@ -26,9 +37,17 @@ test('page-loader: full path of the loaded file', async () => {
 })
 
 test('page-loader: write expected file', async () => {
-    const expectedFile = await readFixture('expected-file.html')
+    const expectedFile = await readFixture('expected-index.html')
     const filePath = await pageLoader('https://ru.hexlet.io/courses', tempPath)
-    const loadedFile = await readFile(filePath, 'utf-8')
 
-    expect(loadedFile).toBe(expectedFile)
+    expect(await readFile(filePath)).toBe(expectedFile)
+})
+
+test('page-loader: write expected assets', async () => {
+    await pageLoader('https://ru.hexlet.io/courses', tempPath)
+    const assetsPath = join(tempPath, 'ru-hexlet-io-courses_files')
+    const fileName = 'ru-hexlet-io-assets-professions-nodejs.png'
+
+    expect(await readdir(assetsPath)).toHaveLength(4)
+    expect(await readFile(join(assetsPath, fileName))).toBe(await readFixture('picture.png'))
 })
