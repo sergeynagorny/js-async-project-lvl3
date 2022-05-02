@@ -1,8 +1,10 @@
+debug := DEBUG=axios,page-loader,nock.common
+
 install:
 	npm ci
 
 run:
-	bin/page-loader.js
+	$(debug) bin/page-loader.js $(url) $(output)
 
 publish:
 	npm publish --dry-run
@@ -15,6 +17,9 @@ lint-fix:
 
 test:
 	npm test
+
+test-debug:
+	$(debug) npm test
 
 test-watch:
 	npm test -- --watch
