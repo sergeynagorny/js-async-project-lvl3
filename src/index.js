@@ -1,5 +1,6 @@
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
+import Listr from 'listr'
 import { debug, http } from './lib/index.js'
 import { formatUrl, normalizeExtension } from './utils/index.js'
 import grabResources from './grab-resources.js'
@@ -13,25 +14,29 @@ export default function loadPage(requestUrl, outputPath) {
 
     return http
         .get(requestUrl)
-        .then(({ data }) => {
+        .then(async ({ data }) => {
             const { resources, html } = grabResources(data, requestUrl, loadedAssetsDirPath)
 
-            const downloadResources = () =>
-                Promise.all(
-                    resources.map(({ href, filePath }) =>
+            const tasks = new Listr(
+                resources.map(({ href, filePath }) => ({
+                    title: href,
+                    task: () =>
                         http
                             .get(href, { responseType: 'arraybuffer' })
                             .then(({ data: file }) => writeFile(join(outputPath, filePath), file))
-                            .catch((error) => console.error(`${error.name}: ${error.message}`))
-                    )
-                )
+                            .catch(() => console.error(`Can't download: ${href}`)),
+                })),
+                { concurrent: true }
+            )
 
-            return writeFile(fullPath, html)
+            return mkdir(outputPath, { recursive: true })
+                .then(() => writeFile(fullPath, html))
                 .then(() => mkdir(join(outputPath, loadedAssetsDirPath), { recursive: true }))
-                .then(downloadResources)
+                .then(() => tasks.run())
         })
         .then(() => {
             debug(`output: ${fullPath}`)
             return fullPath
         })
+        .catch((e) => console.error(e.message))
 }

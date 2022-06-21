@@ -1,4 +1,5 @@
 debug := DEBUG=axios,page-loader,nock.common
+url = https://page-loader.hexlet.repl.co/
 
 install:
 	npm ci

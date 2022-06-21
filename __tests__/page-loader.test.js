@@ -28,6 +28,10 @@ beforeEach(async () => {
         .replyWithFile(200, getFixturePath('script.js'))
         .get('/assets/application.css')
         .replyWithFile(200, getFixturePath('styles.css'))
+        .get('/packs/js/not-found.js')
+        .replyWithError('resource not found')
+        .get('/not-found')
+        .replyWithError('page not found')
 })
 
 test('page-loader: full path of the loaded file', async () => {

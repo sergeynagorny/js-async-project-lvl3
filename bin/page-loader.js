@@ -10,7 +10,16 @@ program
     .option('-o, --output [dir]', 'output dir', process.cwd())
     .action((url) => {
         const { output } = program.opts()
-        loadPage(url, output).then((res) => console.log(res))
+
+        loadPage(url, output)
+            .then((res) => {
+                console.log(`Page was successfully downloaded into: ${res}`)
+                process.exit(0)
+            })
+            .catch((e) => {
+                console.error(e)
+                process.exit(1)
+            })
     })
 
 program.parse(process.argv)
