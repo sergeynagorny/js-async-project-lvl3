@@ -1,3 +1,3 @@
 import init from './src/index.js'
 
-export default init
+export default loadPage
