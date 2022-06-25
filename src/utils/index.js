@@ -2,16 +2,18 @@ import prettier from 'prettier'
 
 export const formatHtml = (html) => prettier.format(html, { parser: 'html' })
 
-export const formatUrl = (url) => {
+export const formatUrl = (requestUrl) => {
     const Reg = {
         protocol: new RegExp(/^https?:\/\//),
         characters: new RegExp(`([/]|[.](?![a-z0-9]+$))`, 'g'),
+        eitherSide: new RegExp(`^-|-$`, 'g'),
     }
 
-    const removeProtocol = (str) => str.replace(Reg.protocol, '')
-    const replaceCharacter = (str) => str.replace(Reg.characters, '-')
-
-    return replaceCharacter(removeProtocol(url))
+    return requestUrl
+        .toString()
+        .replace(Reg.protocol, '')
+        .replace(Reg.characters, '-')
+        .replace(Reg.eitherSide, '')
 }
 
 export const normalizeExtension = (str, ext) => {
